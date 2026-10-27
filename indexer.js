@@ -1,9 +1,9 @@
-// Construcción y caché del índice de definiciones. Lo usan el popup y el
-// service worker (precarga en segundo plano). Requiere fetcher.js.
+// Builds and caches the definitions index. Used by the popup and the service
+// worker (background preload). Requires fetcher.js.
 
 const INDEX_VERSION = 'v3';
 const INDEX_STALE_MS = 12 * 60 * 60 * 1000;
-// Primero lo más buscado, así aparece antes.
+// Most searched first, so they show up sooner.
 const INDEX_KINDS = [
   'field', 'recordtype', 'list', 'script', 'deployment', 'workflow', 'savedsearch',
   'role', 'account', 'subsidiary', 'department', 'location', 'classification'
@@ -36,8 +36,8 @@ async function runInTab(tabId, func, args = []) {
   return res.result;
 }
 
-// Pide todos los tipos en paralelo; onPartial recibe los ítems acumulados a
-// medida que llega cada tipo. Guarda el índice completo al terminar.
+// Requests every kind in parallel; onPartial receives the accumulated items as
+// each kind arrives. Saves the full index when done.
 async function buildIndex(tabId, origin, onPartial) {
   const items = [];
   const failed = [];
@@ -52,14 +52,14 @@ async function buildIndex(tabId, origin, onPartial) {
     }
     if (!res || res.error) {
       if (res && res.table) failed.push(`${kind}: ${res.error}`);
-      else fatal = res ? res.error : 'sin respuesta';
+      else fatal = res ? res.error : 'no response';
       return;
     }
     items.push(...res.items);
     if (onPartial) onPartial(items);
   }));
-  if (!items.length) return { error: fatal || failed.join(' | ') || 'Sin datos' };
+  if (!items.length) return { error: fatal || failed.join(' | ') || 'No data' };
   await chrome.storage.local.set({ [indexKey(origin)]: { at: Date.now(), items } });
-  if (failed.length) console.warn('Tablas no disponibles:', failed);
+  if (failed.length) console.warn('Unavailable tables:', failed);
   return { items, failed };
 }

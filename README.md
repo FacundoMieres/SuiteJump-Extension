@@ -2,91 +2,90 @@
 
 # SuiteJump
 
-Buscador universal para NetSuite. Extensión de Chrome/Edge (Manifest V3) para buscar **cualquier registro de NetSuite** por *internal ID*, *script ID*, *número* o *nombre*, ver de qué tipo es cada coincidencia y abrirla directamente.
+Universal search for NetSuite. A Chrome/Edge extension (Manifest V3) to find **any NetSuite record** by *internal ID*, *script ID*, *number* or *name*, see what type each match is, and open it directly.
 
-## Uso
+## Usage
 
-1. Estando en una pestaña de NetSuite (idealmente un registro abierto: transacción, cliente, etc.), abrí el popup o usá **Alt+Shift+F**.
-2. Escribí un ID (`1234`), un script ID (`custbody_`, `customscript_`), un número de documento (`SO1001`) o parte de un nombre.
-3. Cada resultado muestra una etiqueta con su tipo (*Campo · Transaction Body*, *Script · User Event*, *Sales Order*, *Caso*, *Registro · Mi Custom Record*…). Los chips de arriba filtran por grupo y muestran cuántos hay de cada uno.
-   - **Enter**: abre el resultado seleccionado · **↑ / ↓**: navegar
-   - **Ctrl+Click / Ctrl+Enter / click del medio**: abrir en segundo plano
-   - **⟳**: recargar el índice de definiciones (después de crear campos, scripts, etc.)
+1. On a NetSuite tab (ideally an open record: transaction, customer, etc.), open the popup or press **Alt+Shift+F**.
+2. Type an ID (`1234`), a script ID (`custbody_`, `customscript_`), a document number (`SO1001`) or part of a name.
+3. Each result shows a tag with its type (*Field · Transaction Body*, *Script · User Event*, *Sales Order*, *Case*, *Record · My Custom Record*…). The chips at the top filter by group and show how many results each one has.
+   - **Enter**: open the selected result · **↑ / ↓**: navigate
+   - **Ctrl+Click / Ctrl+Enter / middle click**: open in the background
+   - **Refresh button**: reload the definitions index (after creating fields, scripts, etc.)
 
-## Qué busca
+## What it finds
 
-**Definiciones** (se indexan una vez por cuenta y se guardan en `chrome.storage.local`; la búsqueda es instantánea):
+**Definitions** (indexed once per account and stored in `chrome.storage.local`; search is instant):
 
-| Tipo | Tabla SuiteQL | Página |
+| Type | SuiteQL table | Page |
 |---|---|---|
-| Campos personalizados (todos los tipos) | `customfield` | `bodycustfield.nl`, `columncustfield.nl`, `entitycustfield.nl`, `itemcustfield.nl`, `eventcustfield.nl`, `othercustfield.nl`, `itemoption.nl`, `itemnumbercustfield.nl`, `custreccustfield.nl` |
+| Custom fields (all types) | `customfield` | `bodycustfield.nl`, `columncustfield.nl`, `entitycustfield.nl`, `itemcustfield.nl`, `eventcustfield.nl`, `othercustfield.nl`, `itemoption.nl`, `itemnumbercustfield.nl`, `custreccustfield.nl` |
 | Custom Record Types | `customrecordtype` | `custrecord.nl` |
 | Custom Lists | `customlist` | `custlist.nl` |
 | Scripts | `script` | `scripting/script.nl` |
 | Script Deployments | `scriptdeployment` | `scripting/scriptrecord.nl` |
 | Workflows | `workflow` | `workflow/setup/nwmanager.nl` |
-| Búsquedas guardadas | `savedsearch` | `search/search.nl` (+ link a resultados) |
-| Roles, cuentas, subsidiarias, departamentos, ubicaciones, clases | `role`, `account`, `subsidiary`, `department`, `location`, `classification` | páginas de setup / otherlists |
+| Saved searches | `savedsearch` | `search/search.nl` (+ link to results) |
+| Roles, accounts, subsidiaries, departments, locations, classes | `role`, `account`, `subsidiary`, `department`, `location`, `classification` | setup / otherlists pages |
 
-**Registros de datos** (se consultan en vivo mientras escribís):
+**Data records** (queried live as you type):
 
-| Tipo | Con un número (internal ID) | Con texto |
+| Type | With a number (internal ID) | With text |
 |---|---|---|
-| Transacciones (todas) | `id` | `tranid` exacto |
-| Casos | `id` | número de caso o título |
-| Entidades (clientes, proveedores, empleados, contactos…) | `id` | `entityid` |
-| Items | `id` | `itemid` / nombre para mostrar |
-| Archivos | `id` | nombre |
-| Tareas, llamadas, eventos | `id` | — |
-| Instancias de **cada** custom record | `id` | — |
+| Transactions (all) | `id` | exact `tranid` |
+| Cases | `id` | case number or title |
+| Entities (customers, vendors, employees, contacts…) | `id` | `entityid` |
+| Items | `id` | `itemid` / display name |
+| Files | `id` | name |
+| Tasks, phone calls, events | `id` | — |
+| Instances of **every** custom record | `id` | — |
 
-Las búsquedas por texto devuelven como máximo 10 resultados por tipo.
+Text searches return at most 10 results per type.
 
-## Idiomas
+## Languages
 
-La interfaz está en **español, inglés y portugués**. Arranca en el idioma del navegador (o en inglés si no es ninguno de esos) y se cambia con el desplegable del popup; la elección queda guardada. Los nombres propios de NetSuite (*Transaction Body*, *Custom Record Type*, *Workflow*…) se muestran igual en todos los idiomas.
+The UI is available in **English, Spanish and Portuguese**. It starts in the browser language (or English if it is none of those) and can be changed from the popup dropdown; the choice is saved. NetSuite proper names (*Transaction Body*, *Custom Record Type*, *Workflow*…) look the same in every language.
 
-- Textos del popup: [i18n.js](i18n.js). Para agregar un idioma, sumá una entrada en `LANGS` y otra en `I18N`.
-- Descripción de la extensión y del atajo de teclado: [_locales](_locales) (`es`, `en`, `pt_BR`).
+- Popup text: [i18n.js](i18n.js). To add a language, add an entry to `LANGS` and another to `I18N`.
+- Extension and keyboard shortcut descriptions: [_locales](_locales) (`es`, `en`, `pt_BR`).
 
-## Velocidad
+## Speed
 
-- **Precarga**: al abrir cualquier página de NetSuite, el service worker (`background.js`) arma el índice de esa cuenta en segundo plano si no existe o tiene más de 12 h. Cuando abrís el popup ya está listo.
-- **En paralelo**: cada tipo de definición se consulta por separado y al mismo tiempo, pidiendo solo las columnas necesarias; las páginas de resultados también se traen en paralelo.
-- **Progresivo**: si el índice todavía no existe, el popup muestra resultados a medida que llega cada tipo.
-- **Sin esperas visibles**: el botón ⟳ gira mientras hay trabajo; nunca bloquea la búsqueda. Con ⟳ se refresca en segundo plano y el índice anterior sigue usable.
+- **Preload**: when any NetSuite page opens, the service worker (`background.js`) builds that account's index in the background if it is missing or older than 12 h, so it is ready when you open the popup.
+- **Parallel**: each definition type is queried separately and at the same time, requesting only the needed columns; result pages are also fetched in parallel.
+- **Progressive**: if the index does not exist yet, the popup shows results as each type arrives.
+- **No visible waits**: the refresh icon spins while there is work and never blocks the search. Refreshing runs in the background and the previous index stays usable.
 
-## Cómo funciona
+## How it works
 
-- `fetcher.js` se inyecta en la página (`world: MAIN`) y usa `N/query` (SuiteQL) con los permisos del usuario logueado. No requiere tokens ni integraciones.
-- Si una tabla no existe o tu rol no tiene acceso, se omite sin cortar el resto (el detalle queda en la consola del popup).
-- `registry.js` define la etiqueta, el grupo y la URL de cada tipo. Si alguna URL no abre bien en tu cuenta, se corrige ahí.
+- `fetcher.js` is injected into the page (`world: MAIN`) and uses `N/query` (SuiteQL) with the signed-in user's permissions. No tokens or integrations required.
+- If a table does not exist or your role has no access, it is skipped without stopping the rest (details in the popup console).
+- `registry.js` defines each type's label, group and URL. If a URL does not open correctly in your account, fix it there.
 
-## Logs y diagnóstico
+## Logs and troubleshooting
 
-- **Consultas a NetSuite**: en la pestaña de NetSuite, `F12` → *Console*, filtrá por `[SuiteJump]`. Ahí se ve de dónde se cargó `N/query`, cuántas filas trajo cada tabla y qué consultas fallaron.
-- **Popup**: click derecho dentro del popup → *Inspeccionar* → *Console*.
-- **Errores de la extensión**: `chrome://extensions` → botón *Errores* de la extensión.
+- **NetSuite queries**: on the NetSuite tab, `F12` → *Console*, filter by `[SuiteJump]`. It shows where `N/query` was loaded from, how many rows each table returned and which queries failed.
+- **Popup**: right-click inside the popup → *Inspect* → *Console*.
+- **Extension errors**: `chrome://extensions` → the extension's *Errors* button.
 
-## Limitaciones
+## Limitations
 
-- Las páginas de lista (p. ej. *Tipos de registro*) y el dashboard no cargan SuiteScript 2.0. En ese caso la extensión abre un iframe oculto con un formulario nuevo de NetSuite (tarea, cliente u orden de venta) solo para obtener `N/query`; no se guarda nada. Si tu rol no puede abrir ninguno, abrí cualquier registro y reintentá (las URLs están en `CANDIDATES`, en `fetcher.js`).
-- Solo aparece lo que tu rol puede ver por SuiteQL.
-- Buscar un ID consulta todos los custom records de la cuenta en paralelo; en cuentas con muchísimos custom records puede tardar un poco.
+- List pages (e.g. *Record Types*) and the dashboard do not load SuiteScript 2.0. In that case the extension opens a hidden iframe with a new NetSuite form (task, customer or sales order) only to get `N/query`; nothing is saved. If your role cannot open any of them, open any record and try again (the URLs are in `CANDIDATES`, in `fetcher.js`).
+- Only what your role can see through SuiteQL appears.
+- Searching an ID queries every custom record in the account in parallel; accounts with a very large number of custom records may take a moment.
 
-## Publicar en la Chrome Web Store
+## Publishing to the Chrome Web Store
 
-1. Generá el paquete (queda en `dist/suitejump-<versión>.zip`):
+1. Build the package (output: `dist/suitejump-<version>.zip`):
    ```bash
    powershell -ExecutionPolicy Bypass -File tools/package.ps1
    ```
-2. Creá una cuenta de desarrollador en el [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole) (pago único de USD 5).
-3. Subí el ZIP y completá la ficha con los textos de [store/listing.md](store/listing.md).
-4. Publicá [store/privacy-policy.md](store/privacy-policy.md) en una URL pública (p. ej. GitHub Pages o un Gist) y pegá el link en la ficha. Antes, completá el email de contacto.
-5. Subí al menos una captura de 1280×800 de una cuenta real, sin datos sensibles.
-6. Para cada versión nueva, subí el número de `version` en `manifest.json` y volvé a generar el ZIP.
+2. Upload the ZIP in the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+3. Fill in the listing with the text in [store/listing.md](store/listing.md) and the images in [store](store) (screenshots, promo tile and 512 px icon).
+4. Use [store/privacy-policy.md](store/privacy-policy.md) as the privacy policy, linked from its public URL in this repository.
+5. For each new version, bump `version` in `manifest.json` and rebuild the ZIP.
 
-Los íconos salen de [icons/logo.svg](icons/logo.svg). Para regenerar los PNG:
+The icons come from [icons/logo.svg](icons/logo.svg). To regenerate the PNGs:
 ```bash
 powershell -ExecutionPolicy Bypass -File tools/make-icons.ps1 -OutDir icons
 ```

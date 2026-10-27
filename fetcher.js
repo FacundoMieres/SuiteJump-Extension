@@ -1,12 +1,12 @@
-// Estas funciones se inyectan en la página de NetSuite (world: MAIN) para usar
-// N/query con la sesión del usuario. Cada una debe ser autocontenida: no puede
-// usar nada definido fuera de ella (salvo window.__suitejump, que instala nsBridge).
+// These functions are injected into the NetSuite page (world: MAIN) to use
+// N/query with the user's session. Each one must be self-contained: it cannot
+// use anything defined outside of it (except window.__suitejump, set up by nsBridge).
 
-// Instala window.__suitejump.getQuery(): obtiene el módulo N/query de la página o,
-// si la página no carga SuiteScript 2.0 (listas, dashboard, etc.), de un iframe
-// oculto que abre una página de NetSuite que sí lo carga.
+// Installs window.__suitejump.getQuery(): gets the N/query module from the page or,
+// if the page does not load SuiteScript 2.0 (lists, dashboard, etc.), from a hidden
+// iframe that opens a NetSuite page that does.
 function nsBridge() {
-  const VERSION = 2;
+  const VERSION = 3;
   if (window.__suitejump && window.__suitejump.version === VERSION) return;
   const log = (...a) => console.info('[SuiteJump]', ...a);
   const FRAME_ID = '__suitejump_frame';
@@ -16,20 +16,20 @@ function nsBridge() {
     '/app/accounting/transactions/salesord.nl'
   ];
 
-  // NetSuite puede declarar require como global léxico (const/let): existe en la
-  // consola pero no como window.require. Por eso se resuelve por nombre.
+  // NetSuite may declare require as a lexical global (const/let): it exists in the
+  // console but not as window.require, so it is resolved by name.
   // eslint-disable-next-line no-undef
   const pageRequire = () => (typeof require === 'function' ? require : window.require);
   const frameRequire = (win) => {
     try {
       const req = win.eval('typeof require === "function" ? require : undefined');
       if (typeof req === 'function') return req;
-    } catch (e) { /* CSP sin eval o frame inaccesible */ }
+    } catch (e) { /* CSP without eval, or inaccessible frame */ }
     try { return win.require; } catch (e) { return undefined; }
   };
 
   const loadQuery = (req) => new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout cargando N/query')), 15000);
+    const timer = setTimeout(() => reject(new Error('Timed out loading N/query')), 15000);
     req(['N/query'], (q) => { clearTimeout(timer); resolve(q); }, (e) => { clearTimeout(timer); reject(e); });
   });
 
@@ -45,7 +45,7 @@ function nsBridge() {
       resolve(ok ? frame : null);
     };
     frame.addEventListener('load', () => {
-      // Esperamos a que el loader AMD de NetSuite quede disponible.
+      // Wait until NetSuite's AMD loader is available.
       let tries = 0;
       const poll = setInterval(() => {
         if (typeof frameRequire(frame.contentWindow) === 'function') { clearInterval(poll); finish(true); }
@@ -68,26 +68,26 @@ function nsBridge() {
         if (typeof req === 'function') {
           try {
             const q = await loadQuery(req);
-            log('N/query cargado desde la página actual');
+            log('N/query loaded from the current page');
             return q;
           } catch (e) {
-            log('La página tiene require pero no cargó N/query:', e);
+            log('The page has require but N/query did not load:', e);
           }
         } else {
-          log('La página actual no carga SuiteScript 2.0; probando iframe oculto');
+          log('The current page does not load SuiteScript 2.0; trying a hidden iframe');
         }
         const existing = document.getElementById(FRAME_ID);
         if (existing) existing.remove();
         for (const url of CANDIDATES) {
-          log('Probando iframe:', url);
+          log('Trying iframe:', url);
           const frame = await openFrame(url);
-          if (!frame) { log('Sin SuiteScript en', url); continue; }
+          if (!frame) { log('No SuiteScript in', url); continue; }
           try {
             const q = await loadQuery(frameRequire(frame.contentWindow));
-            log('N/query cargado desde iframe', url);
+            log('N/query loaded from iframe', url);
             return q;
           } catch (e) {
-            log('Falló N/query en', url, e);
+            log('N/query failed in', url, e);
             frame.remove();
           }
         }
@@ -99,9 +99,8 @@ function nsBridge() {
   };
 }
 
-// Índice de metadatos (se cachea). Trae un solo tipo por llamada para que el
-// popup y el service worker puedan pedir todos en paralelo y mostrar resultados
-// a medida que llegan.
+// Metadata index (cached). Fetches a single kind per call so the popup and the
+// service worker can request them all in parallel and show results as they arrive.
 async function nsFetchKind(kind) {
   let query;
   try {
@@ -115,7 +114,7 @@ async function nsFetchKind(kind) {
     Object.keys(r).forEach((k) => { row[k.toLowerCase()] = r[k]; });
     return row;
   };
-  // Versión asíncrona: todas las páginas se piden en paralelo.
+  // Async version: all pages are fetched in parallel.
   const runPaged = async (sql) => {
     const opts = { query: sql, pageSize: 1000 };
     const paged = query.runSuiteQLPaged.promise
@@ -126,8 +125,8 @@ async function nsFetchKind(kind) {
       : paged.fetch({ index: range.index }))));
     return pages.flatMap((p) => p.data.asMappedResults().map(lower));
   };
-  // Prueba cada variante de SQL hasta que una funcione (las columnas varían por
-  // cuenta). Las primeras piden solo las columnas necesarias, que es más rápido.
+  // Tries each SQL variant until one works (columns vary by account). The first
+  // ones request only the needed columns, which is faster.
   const runFirst = async (sqls) => {
     let lastError;
     for (const sql of sqls) {
@@ -167,11 +166,11 @@ async function nsFetchKind(kind) {
   };
 
   const src = sources[kind];
-  if (!src) return { error: `Tipo desconocido: ${kind}` };
+  if (!src) return { error: `Unknown kind: ${kind}` };
   const started = Date.now();
   try {
     const rows = await runFirst(src.sql);
-    log(`${kind}: ${rows.length} filas en ${Date.now() - started} ms`);
+    log(`${kind}: ${rows.length} rows in ${Date.now() - started} ms`);
     return {
       items: rows.map((r) => ({
         kind,
@@ -182,14 +181,14 @@ async function nsFetchKind(kind) {
       }))
     };
   } catch (e) {
-    log(`${kind}: falló`, e);
+    log(`${kind}: failed`, e);
     return { error: e.message || String(e), table: true };
   }
 }
 
-// Búsqueda en vivo de registros de datos (transacciones, casos, entidades, etc.).
-// Con un número busca por internal ID en todos los tipos, incluidas las
-// instancias de cada custom record; con texto busca por número/nombre.
+// Live search of data records (transactions, cases, entities, etc.). A number
+// searches by internal ID across every kind, including instances of each custom
+// record; text searches by number/name.
 async function nsLiveSearch(term, customRecordTypes) {
   let query;
   try {
@@ -278,7 +277,7 @@ async function nsLiveSearch(term, customRecordTypes) {
       const rows = await runFirst(spec.sql, spec.params);
       return rows.map((r) => ({ kind: spec.kind, id: r.id, ...describe(spec.kind, r), ...(spec.extra || {}), live: true }));
     } catch (e) {
-      log(`Búsqueda en vivo ${spec.kind}${spec.extra ? ' ' + spec.extra.typename : ''}: falló`, e);
+      log(`Live search ${spec.kind}${spec.extra ? ' ' + spec.extra.typename : ''}: failed`, e);
       return [];
     }
   }));

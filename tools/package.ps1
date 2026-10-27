@@ -1,4 +1,4 @@
-# Arma el ZIP para subir a la Chrome Web Store con solo los archivos de la extensión.
+# Builds the Chrome Web Store upload ZIP with only the extension files.
 $root = Split-Path -Parent $PSScriptRoot
 $version = (Get-Content (Join-Path $root 'manifest.json') -Raw | ConvertFrom-Json).version
 $dist = Join-Path $root 'dist'
@@ -14,7 +14,7 @@ Copy-Item (Join-Path $root 'icons\icon*.png') (Join-Path $stage 'icons')
 Copy-Item (Join-Path $root '_locales') $stage -Recurse
 
 if (Test-Path $zip) { Remove-Item -Force $zip }
-# Compress-Archive de PowerShell 5.1 guarda rutas con "\", que la Web Store rechaza.
+# PowerShell 5.1 Compress-Archive stores paths with "\", which the Web Store rejects.
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 $archive = [System.IO.Compression.ZipFile]::Open($zip, 'Create')
 try {
@@ -26,4 +26,4 @@ try {
   $archive.Dispose()
 }
 Remove-Item -Recurse -Force $stage
-Write-Output "Paquete listo: $zip"
+Write-Output "Package ready: $zip"

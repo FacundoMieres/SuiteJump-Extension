@@ -47,7 +47,7 @@ header { display: flex; align-items: center; gap: 6px; padding: 10px; border-bot
   border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg);
 }
 #lang:hover { background: var(--hover); }
-/* Solo gira el ícono; el botón queda quieto. */
+/* Only the icon spins; the button stays still. */
 #refresh.busy { color: var(--accent); }
 #refresh.busy .icon { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

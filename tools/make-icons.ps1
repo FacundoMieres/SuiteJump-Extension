@@ -1,7 +1,7 @@
 param([string]$OutDir)
 Add-Type -AssemblyName System.Drawing
 
-# Misma geometría que icons/logo.svg (viewBox 128), escalada a cada tamaño.
+# Same geometry as icons/logo.svg (viewBox 128), scaled to each size.
 function New-Icon([int]$size, [string]$path) {
   $bmp = New-Object System.Drawing.Bitmap $size, $size
   $g = [System.Drawing.Graphics]::FromImage($bmp)
@@ -11,7 +11,7 @@ function New-Icon([int]$size, [string]$path) {
   $s = $size / 128.0
   $g.ScaleTransform($s, $s)
 
-  # Fondo redondeado con degradado
+  # Rounded background with gradient
   $r = 28; $x = 4; $y = 4; $w = 120; $h = 120
   $bg = New-Object System.Drawing.Drawing2D.GraphicsPath
   $bg.AddArc($x, $y, 2*$r, 2*$r, 180, 90)
@@ -25,12 +25,12 @@ function New-Icon([int]$size, [string]$path) {
   $g.FillPath($brush, $bg)
 
   $white = [System.Drawing.Color]::White
-  # Destino (anillo translúcido); se omite en 16 px para no ensuciar
+  # Target (translucent ring); skipped at 16 px to keep it clean
   if ($size -ge 32) {
     $ring = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(153, 255, 255, 255)), 6
     $g.DrawEllipse($ring, 87, 87, 26, 26)
   }
-  # Arco (cuadrática M28 92 Q64 14 90 74 convertida a Bézier cúbica)
+  # Arc (quadratic M28 92 Q64 14 90 74 converted to cubic Bezier)
   $pen = New-Object System.Drawing.Pen $white, 12
   $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
   $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
@@ -40,7 +40,7 @@ function New-Icon([int]$size, [string]$path) {
   $p3 = New-Object System.Drawing.PointF 90, 74
   $g.DrawBezier($pen, $p0, $c1, $c2, $p3)
 
-  # Punta de flecha cayendo en el destino
+  # Arrowhead landing on the target
   $tri = [System.Drawing.PointF[]]@(
     (New-Object System.Drawing.PointF 98, 92),
     (New-Object System.Drawing.PointF 102, 67),
@@ -50,7 +50,7 @@ function New-Icon([int]$size, [string]$path) {
   $edge.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
   $g.DrawPolygon($edge, $tri)
 
-  # Punto de partida
+  # Starting point
   $g.FillEllipse((New-Object System.Drawing.SolidBrush $white), 18, 82, 20, 20)
 
   $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)

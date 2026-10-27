@@ -1,6 +1,5 @@
-// Catálogo de tipos: etiqueta (clave de i18n.js o nombre de NetSuite), grupo
-// (para los filtros) y URL del registro.
-// Si alguna URL no coincide con tu cuenta, ajustala acá.
+// Kind catalog: label (i18n.js key or NetSuite name), group (for the filters)
+// and record URL. If a URL does not match your account, adjust it here.
 
 const GROUPS = [
   { id: 'all', label: 'group.all' },
@@ -28,7 +27,7 @@ const FIELD_PAGES = {
   RECORD: { page: 'custreccustfield.nl', type: 'Custom Record' }
 };
 
-// Si fieldtype no viene o no es conocido, se deduce por el prefijo del script ID.
+// If fieldtype is missing or unknown, it is inferred from the script ID prefix.
 function inferFieldType(item) {
   const type = (item.fieldtype || '').toUpperCase();
   if (FIELD_PAGES[type]) return type;
@@ -90,7 +89,7 @@ const KINDS = {
   location: { group: 'setup', label: 'label.location', url: (o, it) => `${o}/app/common/otherlists/locationtype.nl?id=${it.id}` },
   classification: { group: 'setup', label: 'label.class', url: (o, it) => `${o}/app/common/otherlists/classtype.nl?id=${it.id}` },
 
-  // Registros de datos (búsqueda en vivo)
+  // Data records (live search)
   transaction: {
     group: 'transaction',
     link: (o, it) => ({ url: `${o}/app/accounting/transactions/transaction.nl?id=${it.id}`, label: it.typename || t('label.transaction') })
@@ -110,7 +109,7 @@ const KINDS = {
   calendarevent: { group: 'other', label: 'label.event', url: (o, it) => `${o}/app/crm/calendar/event.nl?id=${it.id}` }
 };
 
-// Devuelve { url, label, group, extra? } para cualquier ítem.
+// Returns { url, label, group, extra? } for any item.
 function buildLink(origin, item) {
   const def = KINDS[item.kind];
   if (!def) return { url: origin, label: item.kind, group: 'other' };

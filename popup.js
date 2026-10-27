@@ -40,7 +40,7 @@ function highlight(text, term) {
   return escapeHtml(text.slice(0, i)) + '<mark>' + escapeHtml(text.slice(i, i + term.length)) + '</mark>' + escapeHtml(text.slice(i + term.length));
 }
 
-// Puntaje: ID exacto > script ID exacto > empieza con > contiene.
+// Score: exact ID > exact script ID > starts with > contains.
 function score(item, term) {
   const id = String(item.id);
   const sid = item.scriptid.toLowerCase();
@@ -52,7 +52,7 @@ function score(item, term) {
   if (name.startsWith(term)) return 50;
   if (sid.includes(term)) return 40;
   if (name.includes(term)) return 30;
-  // Resultados en vivo ya vienen filtrados por NetSuite.
+  // Live results are already filtered by NetSuite.
   return item.live ? 20 : 0;
 }
 
@@ -122,7 +122,7 @@ function moveActive(delta) {
   items[active].scrollIntoView({ block: 'nearest' });
 }
 
-// Indicador discreto de carga: el botón de recargar gira mientras haya trabajo.
+// Subtle loading indicator: the refresh icon spins while there is work.
 let busy = 0;
 const $refresh = document.getElementById('refresh');
 function setBusy(delta) {
@@ -140,7 +140,7 @@ function updateCount() {
   $account.textContent = `${new URL(origin).hostname.split('.')[0]} · ${t('ui.definitions', { n: index.length })}`;
 }
 
-// Primera vez en esta cuenta: se arma acá y se muestra a medida que llega.
+// First time on this account: build here and show results as they arrive.
 async function buildHere() {
   setBusy(1);
   try {
@@ -157,8 +157,8 @@ async function buildHere() {
   }
 }
 
-// Refresco en el service worker: sigue aunque se cierre el popup y el índice
-// actual queda usable mientras tanto.
+// Refresh in the service worker: it continues even if the popup closes, and the
+// current index stays usable meanwhile.
 function refreshInBackground() {
   setBusy(1);
   chrome.runtime.sendMessage({ type: 'refresh', tabId: tab.id, url: tab.url }, () => {
@@ -175,7 +175,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   render();
 });
 
-// Consulta registros de datos en NetSuite; descarta respuestas viejas.
+// Queries data records in NetSuite; discards stale responses.
 function scheduleLive() {
   clearTimeout(liveTimer);
   const term = $q.value.trim();

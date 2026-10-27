@@ -1,6 +1,5 @@
-// Traducciones de la interfaz. Los nombres propios de NetSuite (Transaction
-// Body, Custom Record Type, Workflow, etc.) quedan en inglés en todos los idiomas,
-// igual que en la interfaz de NetSuite.
+// UI translations. NetSuite proper names (Transaction Body, Custom Record Type,
+// Workflow, etc.) stay in English in every language, as in the NetSuite UI.
 
 const LANGS = [
   { id: 'es', label: 'Español' },
@@ -137,7 +136,7 @@ const I18N = {
   }
 };
 
-// Idioma inicial: el del navegador si está soportado; si no, inglés.
+// Initial language: the browser's if supported; otherwise English.
 function detectLang() {
   let ui = 'en';
   try { ui = chrome.i18n.getUILanguage(); } catch (e) { ui = navigator.language || 'en'; }
@@ -156,17 +155,17 @@ async function loadLang() {
   try {
     const { lang } = await chrome.storage.local.get('lang');
     if (I18N[lang]) LANG = lang;
-  } catch (e) { /* se queda con el idioma del navegador */ }
+  } catch (e) { /* keep the browser language */ }
   return LANG;
 }
 
 async function saveLang(lang) {
   if (!I18N[lang]) return;
   LANG = lang;
-  try { await chrome.storage.local.set({ lang }); } catch (e) { /* solo dura esta sesión */ }
+  try { await chrome.storage.local.set({ lang }); } catch (e) { /* only lasts for this session */ }
 }
 
-// Textos fijos del HTML: data-i18n (texto), data-i18n-placeholder, data-i18n-title.
+// Static HTML text: data-i18n (text), data-i18n-placeholder, data-i18n-title.
 function applyI18n(root = document) {
   document.documentElement.lang = LANG;
   root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
