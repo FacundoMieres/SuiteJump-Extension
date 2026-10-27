@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>SuiteJump</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img class="logo" src="icons/icon32.png" alt="SuiteJump" width="24" height="24">
+    <input id="q" type="search" placeholder="Internal ID, script ID, número o nombre…" autocomplete="off" autofocus>
+    <button id="refresh" title="Recargar índice desde NetSuite">⟳</button>
+  </header>
+  <div id="filters"></div>
+  <div id="status"></div>
+  <ul id="results"></ul>
+  <footer>
+    <span id="account"></span>
+    <span class="hint">Enter: abrir · ↑↓: navegar · Ctrl: 2º plano</span>
+  </footer>
+  <script src="registry.js"></script>
+  <script src="fetcher.js"></script>
+  <script src="indexer.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
