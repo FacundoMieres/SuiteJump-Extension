@@ -8,9 +8,10 @@ $zip = Join-Path $dist "suitejump-$version.zip"
 if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
 New-Item -ItemType Directory -Force (Join-Path $stage 'icons') | Out-Null
 
-$files = 'manifest.json', 'background.js', 'fetcher.js', 'indexer.js', 'registry.js', 'popup.html', 'popup.css', 'popup.js'
+$files = 'manifest.json', 'background.js', 'fetcher.js', 'i18n.js', 'indexer.js', 'registry.js', 'popup.html', 'popup.css', 'popup.js'
 foreach ($f in $files) { Copy-Item (Join-Path $root $f) $stage }
 Copy-Item (Join-Path $root 'icons\icon*.png') (Join-Path $stage 'icons')
+Copy-Item (Join-Path $root '_locales') $stage -Recurse
 
 if (Test-Path $zip) { Remove-Item -Force $zip }
 # Compress-Archive de PowerShell 5.1 guarda rutas con "\", que la Web Store rechaza.

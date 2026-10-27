@@ -1,0 +1,10 @@
+{
+  "extDescription": {
+    "message": "Saltá a cualquier campo, script, custom record, transacción o caso de NetSuite por internal ID, script ID o nombre.",
+    "description": "Descripción corta de la extensión"
+  },
+  "cmdOpen": {
+    "message": "Abrir SuiteJump",
+    "description": "Descripción del atajo de teclado"
+  }
+}

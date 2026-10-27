@@ -3,9 +3,15 @@
   "name": "SuiteJump",
   "short_name": "SuiteJump",
   "version": "1.0.0",
-  "description": "Saltá a cualquier campo, script, custom record, transacción o caso de NetSuite por internal ID, script ID o nombre.",
-  "permissions": ["scripting", "storage"],
-  "host_permissions": ["https://*.netsuite.com/*"],
+  "default_locale": "es",
+  "description": "__MSG_extDescription__",
+  "permissions": [
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.netsuite.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
@@ -25,8 +31,10 @@
   },
   "commands": {
     "_execute_action": {
-      "suggested_key": { "default": "Alt+Shift+F" },
-      "description": "Abrir SuiteJump"
+      "suggested_key": {
+        "default": "Alt+Shift+F"
+      },
+      "description": "__MSG_cmdOpen__"
     }
   }
 }

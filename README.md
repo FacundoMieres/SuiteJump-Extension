@@ -42,6 +42,13 @@ Buscador universal para NetSuite. Extensión de Chrome/Edge (Manifest V3) para b
 
 Las búsquedas por texto devuelven como máximo 10 resultados por tipo.
 
+## Idiomas
+
+La interfaz está en **español, inglés y portugués**. Arranca en el idioma del navegador (o en inglés si no es ninguno de esos) y se cambia con el desplegable del popup; la elección queda guardada. Los nombres propios de NetSuite (*Transaction Body*, *Custom Record Type*, *Workflow*…) se muestran igual en todos los idiomas.
+
+- Textos del popup: [i18n.js](i18n.js). Para agregar un idioma, sumá una entrada en `LANGS` y otra en `I18N`.
+- Descripción de la extensión y del atajo de teclado: [_locales](_locales) (`es`, `en`, `pt_BR`).
+
 ## Velocidad
 
 - **Precarga**: al abrir cualquier página de NetSuite, el service worker (`background.js`) arma el índice de esa cuenta en segundo plano si no existe o tiene más de 12 h. Cuando abrís el popup ya está listo.

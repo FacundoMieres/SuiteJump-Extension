@@ -6,6 +6,7 @@ const $results = document.getElementById('results');
 const $status = document.getElementById('status');
 const $account = document.getElementById('account');
 const $filters = document.getElementById('filters');
+const $lang = document.getElementById('lang');
 
 let tab = null;
 let origin = null;
@@ -17,9 +18,14 @@ let current = [];
 let active = 0;
 let group = 'all';
 
-function setStatus(text, isError = false) {
-  $status.textContent = text;
-  $status.className = isError ? 'error' : '';
+let statusMsg = null;
+function setStatus(key, vars = {}, isError = false) {
+  statusMsg = key ? { key, vars, isError } : null;
+  renderStatus();
+}
+function renderStatus() {
+  $status.textContent = statusMsg ? t(statusMsg.key, statusMsg.vars) : '';
+  $status.className = statusMsg && statusMsg.isError ? 'error' : '';
 }
 
 function escapeHtml(s) {
@@ -72,7 +78,7 @@ function renderFilters(all) {
     if (g.id !== 'all' && !counts[g.id]) return;
     const b = document.createElement('button');
     b.className = 'chip' + (g.id === group ? ' on' : '');
-    b.textContent = `${g.label} ${counts[g.id] || 0}`;
+    b.textContent = `${t(g.label)} ${counts[g.id] || 0}`;
     b.addEventListener('click', () => { group = g.id; render(); $q.focus(); });
     $filters.appendChild(b);
   });
@@ -91,7 +97,7 @@ function render() {
     if (i === active) li.className = 'active';
     li.innerHTML = `
       <div class="row1">
-        <span class="name">${highlight(item.name || item.scriptid || '(sin nombre)', term)}</span>
+        <span class="name">${highlight(item.name || item.scriptid || t('ui.noName'), term)}</span>
         <span class="tag g-${link.group}">${escapeHtml(link.label)}</span>
       </div>
       <div class="row2">${item.scriptid ? highlight(item.scriptid, term) + ' · ' : ''}ID ${highlight(String(item.id), term)}${
@@ -124,15 +130,14 @@ function setBusy(delta) {
   $refresh.classList.toggle('busy', busy > 0);
 }
 
-function errorText(error) {
-  if (error === 'NO_REQUIRE') {
-    return 'No se pudo cargar SuiteScript (N/query) en esta pestaña. Abrí un registro (ej. una transacción) y reintentá. Detalle en la consola de la pestaña (F12), prefijo [SuiteJump].';
-  }
-  return `Error: ${error || 'sin respuesta'}`;
+function showError(error) {
+  if (error === 'NO_REQUIRE') setStatus('err.noRequire', {}, true);
+  else if (error) setStatus('err.generic', { msg: error }, true);
+  else setStatus('err.generic', { msg: t('err.noResponse') }, true);
 }
 
 function updateCount() {
-  $account.textContent = `${new URL(origin).hostname.split('.')[0]} · ${index.length} definiciones`;
+  $account.textContent = `${new URL(origin).hostname.split('.')[0]} · ${t('ui.definitions', { n: index.length })}`;
 }
 
 // Primera vez en esta cuenta: se arma acá y se muestra a medida que llega.
@@ -144,9 +149,9 @@ async function buildHere() {
       updateCount();
       render();
     });
-    if (result.error && !index.length) setStatus(errorText(result.error), true);
+    if (result.error && !index.length) showError(result.error);
   } catch (e) {
-    if (!index.length) setStatus(`No se pudo ejecutar en la pestaña: ${e.message}`, true);
+    if (!index.length) setStatus('err.exec', { msg: e.message }, true);
   } finally {
     setBusy(-1);
   }
@@ -184,25 +189,25 @@ function scheduleLive() {
     try {
       result = await runInTab(tab.id, nsLiveSearch, [term, recordTypes]);
     } catch (e) {
-      if (seq === liveSeq) setStatus(`No se pudo ejecutar en la pestaña: ${e.message}`, true);
+      if (seq === liveSeq) setStatus('err.exec', { msg: e.message }, true);
       return;
     } finally {
       setBusy(-1);
     }
     if (seq !== liveSeq) return;
     if (!result || result.error) {
-      setStatus(errorText(result && result.error), true);
+      showError(result && result.error);
       return;
     }
     live = result.items;
     render();
-    setStatus(current.length ? '' : 'Sin resultados.');
+    setStatus(current.length ? null : 'ui.noResults');
   }, LIVE_DELAY_MS);
 }
 
 $q.addEventListener('input', () => {
   liveSeq++;
-  setStatus('');
+  setStatus(null);
   scheduleLive();
   render();
 });
@@ -218,10 +223,34 @@ $refresh.addEventListener('click', () => {
   $q.focus();
 });
 
+function renderLangs() {
+  $lang.innerHTML = '';
+  LANGS.forEach((l) => {
+    const opt = document.createElement('option');
+    opt.value = l.id;
+    opt.textContent = l.id.toUpperCase();
+    opt.title = l.label;
+    opt.selected = l.id === LANG;
+    $lang.appendChild(opt);
+  });
+}
+
+$lang.addEventListener('change', async () => {
+  await saveLang($lang.value);
+  applyI18n();
+  renderStatus();
+  if (origin) updateCount();
+  render();
+  $q.focus();
+});
+
 (async function init() {
+  await loadLang();
+  renderLangs();
+  applyI18n();
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab || !tab.url || !isNetSuiteUrl(tab.url)) {
-    setStatus('Abrí el popup desde una pestaña de NetSuite.', true);
+    setStatus('ui.notNetSuite', {}, true);
     $q.disabled = true;
     return;
   }
