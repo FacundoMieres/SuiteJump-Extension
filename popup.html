@@ -9,7 +9,12 @@
   <header>
     <img class="logo" src="icons/icon32.png" alt="SuiteJump" width="24" height="24">
     <input id="q" type="search" data-i18n-placeholder="ui.placeholder" autocomplete="off" autofocus>
-    <button id="refresh" data-i18n-title="ui.refresh">⟳</button>
+    <button id="refresh" data-i18n-title="ui.refresh">
+      <svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
     <select id="lang" data-i18n-title="ui.language"></select>
   </header>
   <div id="filters"></div>

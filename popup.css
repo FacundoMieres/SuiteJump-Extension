@@ -37,15 +37,19 @@ header { display: flex; align-items: center; gap: 6px; padding: 10px; border-bot
 #q:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 #refresh {
   width: 34px; border: 1px solid var(--border); border-radius: 6px;
-  background: var(--bg); color: var(--fg); cursor: pointer; font-size: 16px;
+  background: var(--bg); color: var(--fg); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; padding: 0;
 }
+#refresh .icon { display: block; }
 #refresh:hover { background: var(--hover); }
 #lang {
   align-self: stretch; padding: 0 4px; font: inherit; font-size: 12px; cursor: pointer;
   border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg);
 }
 #lang:hover { background: var(--hover); }
-#refresh.busy { color: var(--accent); animation: spin 0.9s linear infinite; }
+/* Solo gira el ícono; el botón queda quieto. */
+#refresh.busy { color: var(--accent); }
+#refresh.busy .icon { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 #filters { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 10px 0; }
 #filters:empty { display: none; }
