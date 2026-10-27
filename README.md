@@ -34,7 +34,9 @@ Universal search for NetSuite. A Chrome/Edge extension (Manifest V3) to find **a
 |---|---|---|
 | Transactions (all) | `id` | exact `tranid` |
 | Cases | `id` | case number or title |
-| Entities (customers, vendors, employees, contacts…) | `id` | `entityid` |
+| Customers, vendors, partners | `id` or entity number | entity number, company name, name, first + last name, email |
+| Employees, contacts | `id` or entity number | entity number, first + last name, name, email |
+| Other entities (projects, other names…) | `id` or entity number | entity number, name |
 | Items | `id` | `itemid` / display name |
 | Files | `id` | name |
 | Tasks, phone calls, events | `id` | — |

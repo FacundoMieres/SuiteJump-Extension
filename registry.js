@@ -95,6 +95,12 @@ const KINDS = {
     link: (o, it) => ({ url: `${o}/app/accounting/transactions/transaction.nl?id=${it.id}`, label: it.typename || t('label.transaction') })
   },
   supportcase: { group: 'case', label: 'label.case', url: (o, it) => `${o}/app/crm/support/supportcase.nl?id=${it.id}` },
+  customer: { group: 'entity', label: 'label.customer', url: (o, it) => `${o}/app/common/entity/custjob.nl?id=${it.id}` },
+  employee: { group: 'entity', label: 'label.employee', url: (o, it) => `${o}/app/common/entity/employee.nl?id=${it.id}` },
+  vendor: { group: 'entity', label: 'label.vendor', url: (o, it) => `${o}/app/common/entity/vendor.nl?id=${it.id}` },
+  contact: { group: 'entity', label: 'label.contact', url: (o, it) => `${o}/app/common/entity/contact.nl?id=${it.id}` },
+  partner: { group: 'entity', label: 'label.partner', url: (o, it) => `${o}/app/common/entity/partner.nl?id=${it.id}` },
+  // Any other entity type (projects, other names, etc.)
   entity: {
     group: 'entity',
     link: (o, it) => ({ url: `${o}/app/common/entity/entity.nl?id=${it.id}`, label: it.typename || t('label.entity') })

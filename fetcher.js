@@ -210,7 +210,7 @@ async function nsLiveSearch(term, customRecordTypes) {
     let lastError;
     for (const sql of sqls) {
       try {
-        const rs = await query.runSuiteQL.promise({ query: sql, params });
+        const rs = await query.runSuiteQL.promise({ query: sql, params: typeof params === 'function' ? params(sql) : params });
         return rs.asMappedResults().map(lower);
       } catch (e) { lastError = e; }
     }
@@ -221,6 +221,22 @@ async function nsLiveSearch(term, customRecordTypes) {
   const like = `%${term.toUpperCase()}%`;
   const LIMIT = 'ROWNUM <= 10';
   const specs = [];
+  // Fills every '?' of a variant with the LIKE pattern.
+  const likeAll = (sql) => Array((sql.match(/\?/g) || []).length).fill(like);
+  // Entity type codes (entity.type) mapped to their own kind and page.
+  const ENTITY_KINDS = { custjob: 'customer', customer: 'customer', employee: 'employee', vendor: 'vendor', contact: 'contact', partner: 'partner' };
+  const company = 'companyname';
+  const person = "firstname || ' ' || lastname";
+  // Per-type text search: richest query first, simpler fallbacks if a column is missing.
+  const entityText = (kind, table, nameCols, extraCols = '') => ({
+    kind,
+    params: likeAll,
+    sql: [
+      `SELECT id, entityid, ${nameCols.map((c, i) => `${c} AS n${i}`).join(', ')}, email${extraCols} FROM ${table} WHERE (UPPER(entityid) LIKE ? OR ${nameCols.map((c) => `UPPER(${c}) LIKE ?`).join(' OR ')} OR UPPER(email) LIKE ?) AND ${LIMIT}`,
+      `SELECT id, entityid, ${nameCols.map((c, i) => `${c} AS n${i}`).join(', ')} FROM ${table} WHERE (UPPER(entityid) LIKE ? OR ${nameCols.map((c) => `UPPER(${c}) LIKE ?`).join(' OR ')}) AND ${LIMIT}`,
+      `SELECT id, entityid FROM ${table} WHERE UPPER(entityid) LIKE ? AND ${LIMIT}`
+    ]
+  });
 
   if (isId) {
     const n = Number(term);
@@ -231,9 +247,10 @@ async function nsLiveSearch(term, customRecordTypes) {
       { kind: 'supportcase', params: [n], sql: [
         'SELECT id, casenumber, title, BUILTIN.DF(company) AS company FROM supportcase WHERE id = ?',
         'SELECT * FROM supportcase WHERE id = ?'] },
-      { kind: 'entity', params: [n], sql: [
-        'SELECT id, entityid, BUILTIN.DF(type) AS typename FROM entity WHERE id = ?',
-        'SELECT * FROM entity WHERE id = ?'] },
+      { kind: 'entity', params: [n, term], sql: [
+        `SELECT id, entityid, altname AS n0, firstname || ' ' || lastname AS n1, type AS typecode, BUILTIN.DF(type) AS typename FROM entity WHERE (id = ? OR entityid = ?) AND ${LIMIT}`,
+        `SELECT id, entityid, altname AS n0, type AS typecode, BUILTIN.DF(type) AS typename FROM entity WHERE (id = ? OR entityid = ?) AND ${LIMIT}`,
+        `SELECT id, entityid, type AS typecode FROM entity WHERE (id = ? OR entityid = ?) AND ${LIMIT}`] },
       { kind: 'item', params: [n], sql: [
         'SELECT id, itemid, displayname, BUILTIN.DF(itemtype) AS typename FROM item WHERE id = ?',
         'SELECT * FROM item WHERE id = ?'] },
@@ -255,9 +272,15 @@ async function nsLiveSearch(term, customRecordTypes) {
         `SELECT id, tranid, BUILTIN.DF(type) AS typename, trandate, BUILTIN.DF(entity) AS entityname FROM transaction WHERE UPPER(tranid) = ? AND ${LIMIT}`] },
       { kind: 'supportcase', params: [term, like], sql: [
         `SELECT id, casenumber, title, BUILTIN.DF(company) AS company FROM supportcase WHERE (casenumber = ? OR UPPER(title) LIKE ?) AND ${LIMIT}`] },
-      { kind: 'entity', params: [like], sql: [
-        `SELECT id, entityid, BUILTIN.DF(type) AS typename FROM entity WHERE UPPER(entityid) LIKE ? AND ${LIMIT}`,
-        `SELECT id, entityid FROM entity WHERE UPPER(entityid) LIKE ? AND ${LIMIT}`] },
+      entityText('customer', 'customer', [company, 'altname', person]),
+      entityText('vendor', 'vendor', [company, 'altname', person]),
+      entityText('partner', 'partner', [company, 'altname', person]),
+      entityText('employee', 'employee', [person, 'altname']),
+      entityText('contact', 'contact', [person, 'altname'], ', BUILTIN.DF(company) AS company'),
+      { kind: 'entity', params: likeAll, sql: [
+        `SELECT id, entityid, altname AS n0, firstname || ' ' || lastname AS n1, type AS typecode, BUILTIN.DF(type) AS typename FROM entity WHERE (UPPER(entityid) LIKE ? OR UPPER(altname) LIKE ?) AND ${LIMIT}`,
+        `SELECT id, entityid, altname AS n0, type AS typecode, BUILTIN.DF(type) AS typename FROM entity WHERE (UPPER(entityid) LIKE ? OR UPPER(altname) LIKE ?) AND ${LIMIT}`,
+        `SELECT id, entityid, type AS typecode FROM entity WHERE UPPER(entityid) LIKE ? AND ${LIMIT}`] },
       { kind: 'item', params: [like, like], sql: [
         `SELECT id, itemid, displayname, BUILTIN.DF(itemtype) AS typename FROM item WHERE (UPPER(itemid) LIKE ? OR UPPER(displayname) LIKE ?) AND ${LIMIT}`] },
       { kind: 'file', params: [like], sql: [
@@ -269,7 +292,10 @@ async function nsLiveSearch(term, customRecordTypes) {
     switch (kind) {
       case 'transaction': return { scriptid: r.tranid || '', name: [r.tranid, r.entityname, r.trandate].filter(Boolean).join(' · '), typename: r.typename || '' };
       case 'supportcase': return { scriptid: r.casenumber || '', name: [r.title, r.company].filter(Boolean).join(' · ') };
-      case 'entity': return { scriptid: r.entityid || '', name: r.entityid || r.entitytitle || r.altname || '', typename: r.typename || '' };
+      case 'entity': case 'customer': case 'vendor': case 'partner': case 'employee': case 'contact': {
+        const display = [r.n0, r.n1, r.n2].map((v) => String(v || '').trim()).find(Boolean) || r.entityid || '';
+        return { scriptid: r.entityid || '', name: [display, r.company, r.email].filter(Boolean).join(' · '), typename: r.typename || '' };
+      }
       case 'item': return { scriptid: r.itemid || '', name: r.displayname || r.itemid || '', typename: r.typename || '' };
       case 'file': return { scriptid: r.folder || '', name: r.name || '' };
       default: return { scriptid: '', name: r.name || r.title || '' };
@@ -279,11 +305,24 @@ async function nsLiveSearch(term, customRecordTypes) {
   const results = await Promise.all(specs.map(async (spec) => {
     try {
       const rows = await runFirst(spec.sql, spec.params);
-      return rows.map((r) => ({ kind: spec.kind, id: r.id, ...describe(spec.kind, r), ...(spec.extra || {}), live: true }));
+      return rows.map((r) => ({ kind: spec.kind, id: r.id, typecode: r.typecode, ...describe(spec.kind, r), ...(spec.extra || {}), live: true }));
     } catch (e) {
       log(`Live search ${spec.kind}${spec.extra ? ' ' + spec.extra.typename : ''}: failed`, e);
       return [];
     }
   }));
-  return { items: results.flat() };
+  const items = results.flat().map((it) => {
+    if (it.kind !== 'entity') return it;
+    const specific = ENTITY_KINDS[String(it.typecode || '').toLowerCase()];
+    return specific ? { ...it, kind: specific } : it;
+  });
+  const seen = new Set();
+  return {
+    items: items.filter((it) => {
+      const key = `${it.kind}:${it.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+  };
 }
