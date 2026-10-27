@@ -4,13 +4,6 @@
 
 Buscador universal para NetSuite. Extensión de Chrome/Edge (Manifest V3) para buscar **cualquier registro de NetSuite** por *internal ID*, *script ID*, *número* o *nombre*, ver de qué tipo es cada coincidencia y abrirla directamente.
 
-## Instalación
-
-1. Abrí `chrome://extensions` (o `edge://extensions`).
-2. Activá **Modo desarrollador**.
-3. **Cargar descomprimida** → seleccioná esta carpeta.
-4. (Opcional) Fijá el ícono en la barra.
-
 ## Uso
 
 1. Estando en una pestaña de NetSuite (idealmente un registro abierto: transacción, cliente, etc.), abrí el popup o usá **Alt+Shift+F**.
