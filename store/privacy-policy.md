@@ -22,4 +22,4 @@ El índice queda solo en tu navegador y se actualiza cada 12 horas. Se borra por
 
 ## Contacto
 
-Para consultas sobre esta política: [COMPLETAR: email de contacto]
+Para consultas sobre esta política: aguscora00@gmail.com

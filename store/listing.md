@@ -1,7 +1,7 @@
 # Ficha para la Chrome Web Store
 
 ## Nombre
-SuiteJump – Buscador universal para NetSuite
+SuiteJump
 
 ## Descripción corta (máx. 132 caracteres)
 Saltá a cualquier campo, script, custom record, transacción o caso de NetSuite por internal ID, script ID o nombre.
@@ -40,6 +40,9 @@ SEGURO Y PRIVADO
 
 SuiteJump es una herramienta independiente y no está afiliada a Oracle ni a NetSuite, ni cuenta con su respaldo. NetSuite es una marca registrada de Oracle.
 
+## URL de la política de privacidad
+https://github.com/FacuMieres13/SuiteJump-Extension/blob/main/store/privacy-policy.md
+
 ## Justificación de permisos (formulario "Privacy practices")
 
 **Propósito único:** buscar registros de NetSuite por ID, script ID o nombre y abrirlos directamente.
@@ -60,5 +63,5 @@ SuiteJump es una herramienta independiente y no está afiliada a Oracle ni a Net
 |---|---|---|
 | Ícono de la tienda | 128×128 | `icons/icon128.png` |
 | Ícono en alta resolución | 512×512 | `store/icon512.png` |
-| Capturas de pantalla (1 a 5) | 1280×800 o 640×400 | **Pendiente**: sacarlas de una cuenta real, sin datos sensibles. |
-| Mosaico promocional pequeño | 440×280 | Opcional |
+| Capturas de pantalla | 1280×800 | `store/screenshot-1-id.png`, `store/screenshot-2-campos.png` |
+| Mosaico promocional pequeño | 440×280 | `store/promo-440x280.png` |
