@@ -148,7 +148,11 @@ async function nsFetchKind(kind) {
       'SELECT internalid AS id, scriptid, name, fieldtype, recordtype FROM customfield',
       'SELECT id, scriptid, name, fieldtype, recordtype FROM customfield',
       'SELECT * FROM customfield'],
-    map: (r) => ({ fieldtype: r.fieldtype || '', recordtype: r.recordtype || null }) },
+    map: (r) => ({ fieldtype: r.fieldtype || '', recordtype: r.recordtype || null }),
+    // Script parameters (custscript_*) live in customfield too; scripts and
+    // deployments are enough, so they are left out.
+    keep: (r) => String(r.fieldtype || '').toUpperCase() !== 'SCRIPT'
+      && !String(r.scriptid || '').toLowerCase().startsWith('custscript') },
     recordtype: { sql: basic('customrecordtype') },
     list: { sql: basic('customlist') },
     script: { sql: ['SELECT id, scriptid, name, BUILTIN.DF(scripttype) AS typename FROM script', 'SELECT * FROM script'],
@@ -169,7 +173,7 @@ async function nsFetchKind(kind) {
   if (!src) return { error: `Unknown kind: ${kind}` };
   const started = Date.now();
   try {
-    const rows = await runFirst(src.sql);
+    const rows = (await runFirst(src.sql)).filter(src.keep || (() => true));
     log(`${kind}: ${rows.length} rows in ${Date.now() - started} ms`);
     return {
       items: rows.map((r) => ({

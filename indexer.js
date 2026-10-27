@@ -1,7 +1,7 @@
 // Builds and caches the definitions index. Used by the popup and the service
 // worker (background preload). Requires fetcher.js.
 
-const INDEX_VERSION = 'v3';
+const INDEX_VERSION = 'v4';
 const INDEX_STALE_MS = 12 * 60 * 60 * 1000;
 // Most searched first, so they show up sooner.
 const INDEX_KINDS = [
